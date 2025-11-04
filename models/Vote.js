@@ -1,4 +1,4 @@
-const pool = require('../db/connection');
+const pool = require('../db/conn');
 
 class Vote {
   static async create({ customer_id, idea_id }) {
