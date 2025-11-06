@@ -37,7 +37,7 @@ api.use('*', (req, res) => {
   res.status(404).json({ error: 'Rota não encontrada.' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.API_PORT || 8080;
 
 api.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

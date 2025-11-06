@@ -1,0 +1,45 @@
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h1 class="mb-4">Editar Ideia: {{idea.title}}</h1>
+        <div id="message-container"></div>
+        <form id="edit-idea-form">
+            <input type="hidden" id="idea-id" value="{{idea.id}}">
+            <div class="mb-3">
+                <label for="title" class="form-label">Título da Ideia</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{idea.title}}" required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Descrição Detalhada</label>
+                <textarea class="form-control" id="description" name="description" rows="5" required>{{idea.description}}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Categoria</label>
+                <input type="text" class="form-control" id="category" name="category" value="{{idea.category}}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            <a href="/" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+<script src="/js/ideas.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!window.getToken()) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        const form = document.getElementById('edit-idea-form');
+        const ideaId = document.getElementById('idea-id').value;
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            window.handleIdeaFormSubmit(form, `/api/ideas/${ideaId}`, 'PUT', (data) => {
+                
+                window.location.href = `/ideas/${ideaId}`;
+            });
+        });
+    });
+</script>

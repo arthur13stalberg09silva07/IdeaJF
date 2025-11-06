@@ -1,0 +1,38 @@
+<div class="form-auth">
+    <h2 class="text-center mb-4">Entrar na Plataforma</h2>
+    <form id="login-form">
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Senha</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div id="message-container-login" class="mb-3"></div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+    <p class="text-center mt-3">
+        Não tem conta? <a href="/register">Cadastre-se</a>
+    </p>
+</div>
+
+<script src="/js/auth-forms.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        if (window.getToken()) {
+            window.location.href = '/';
+        }
+        
+        const form = document.getElementById('login-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleAuthFormSubmit(form, '/api/auth/login', 'message-container-login', (data) => {
+            
+                window.saveAuthData(data.token, data.customer);
+                window.location.href = '/';
+            });
+        });
+    });
+</script>

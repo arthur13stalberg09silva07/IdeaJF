@@ -1,0 +1,55 @@
+<div class="form-auth">
+    <h2 class="text-center mb-4">Cadastre-se</h2>
+    <form id="register-form">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nome</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Senha</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="mb-3">
+            <label for="confirmpassword" class="form-label">Confirmação de Senha</label>
+            <input type="password" class="form-control" id="confirmpassword" name="confirmpassword" required>
+        </div>
+        <div id="message-container-register" class="mb-3"></div>
+        <button type="submit" class="btn btn-success w-100">Cadastrar</button>
+    </form>
+    <p class="text-center mt-3">
+        Já tem conta? <a href="/login">Entrar</a>
+    </p>
+</div>
+
+<script src="/js/auth-forms.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+       
+        if (window.getToken()) {
+            window.location.href = '/';
+        }
+        
+        const form = document.getElementById('register-form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const password = form.elements['password'].value;
+            const confirmPassword = form.elements['confirmpassword'].value;
+
+            if (password !== confirmPassword) {
+                window.showMessage('As senhas não conferem.', 'danger');
+                return;
+            }
+
+            handleAuthFormSubmit(form, '/api/auth/register', 'message-container-register', (data) => {
+                
+                window.saveAuthData(data.token, data.customer);
+                window.location.href = '/';
+            });
+        });
+    });
+</script>

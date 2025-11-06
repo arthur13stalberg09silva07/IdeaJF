@@ -1,0 +1,109 @@
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Meu Perfil</h1>
+        <div id="message-container"></div>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Informações do Usuário</h5>
+                <p><strong>Nome:</strong> <span id="profile-name">Carregando...</span></p>
+                <p><strong>Email:</strong> <span id="profile-email">Carregando...</span></p>
+            </div>
+        </div>
+
+        <h2 class="mb-3">Minhas Ideias</h2>
+        <div id="my-ideas-list" class="row">
+            <p id="loading-ideas">Carregando suas ideias...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const customer = window.getCustomer();
+        
+        if (!customer) {
+            window.location.href = '/login';
+            return;
+        }
+
+        document.getElementById('profile-name').textContent = customer.name;
+        document.getElementById('profile-email').textContent = customer.email;
+
+        const loadMyIdeas = async () => {
+            const ideasList = document.getElementById('my-ideas-list');
+            const loadingMessage = document.getElementById('loading-ideas');
+            
+            try {
+                const response = await window.fetchAuth('/api/ideas/my-ideas', { method: 'GET' });
+                const ideas = await response.json();
+
+                if (loadingMessage) loadingMessage.remove();
+                ideasList.innerHTML = '';
+
+                if (ideas.length === 0) {
+                    ideasList.innerHTML = '<p class="text-center">Você ainda não criou nenhuma ideia.</p>';
+                    return;
+                }
+
+                ideas.forEach(idea => {
+                    ideasList.innerHTML += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${idea.title}</h5>
+                                    <p class="card-text">${idea.description.substring(0, 100)}...</p>
+                                    <div class="idea-actions">
+                                        <a href="/ideas/${idea.id}" class="btn btn-sm btn-info">Visualizar</a>
+                                        <a href="/ideas/edit/${idea.id}" class="btn btn-sm btn-warning">Editar</a>
+                                        <button class="btn btn-sm btn-danger btn-delete-idea" data-idea-id="${idea.id}">Excluir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                document.querySelectorAll('.btn-delete-idea').forEach(button => {
+                    button.addEventListener('click', handleDeleteIdeaClick);
+                });
+
+            } catch (error) {
+                console.error('Erro ao carregar minhas ideias:', error);
+                if (loadingMessage) loadingMessage.textContent = 'Erro ao carregar suas ideias.';
+                window.showMessage('Erro ao carregar suas ideias. Tente novamente mais tarde.', 'danger');
+            }
+        };
+        
+        const handleDeleteIdeaClick = async (e) => {
+            e.preventDefault();
+            const button = e.currentTarget;
+            const ideaId = button.dataset.ideaId;
+            
+            if (!confirm('Tem certeza que deseja excluir esta ideia?')) {
+                return;
+            }
+
+            try {
+                const response = await window.fetchAuth(`/api/ideas/${ideaId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.showMessage('Ideia excluída com sucesso!', 'success');
+                    
+                    loadMyIdeas();
+                } else {
+                    window.showMessage(result.error || 'Erro ao excluir ideia.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao excluir ideia:', error);
+                window.showMessage('Erro de rede ao excluir ideia. Tente novamente.', 'danger');
+            }
+        };
+
+        loadMyIdeas();
+    });
+</script>

@@ -1,0 +1,166 @@
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Ideias Mais Votadas</h1>
+        <div id="message-container"></div>
+        <div id="ideas-list" class="row">
+            <p id="loading-message">Carregando ideias...</p>
+        </div>
+    </div>
+</div>
+
+<script src="/js/ideas.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const renderIdea = (idea) => {
+            const customer = window.getCustomer();
+            const isLoggedIn = !!customer;
+            const isAuthor = isLoggedIn && customer.id === idea.customer_id;
+            const hasVoted = idea.hasVoted; 
+
+            return `
+                <div class="col-md-4">
+                    <div class="card card-idea">
+                        <div class="row g-0">
+                            <div class="col-3 vote-section">
+                                <span class="vote-count" id="vote-count-${idea.id}">${idea.vote_count}</span>
+                                <button class="btn btn-link btn-vote ${hasVoted ? 'voted' : ''}" 
+                                        data-idea-id="${idea.id}" 
+                                        data-action="${hasVoted ? 'remove' : 'add'}"
+                                        ${isLoggedIn ? '' : 'disabled'}
+                                        title="${isLoggedIn ? 'Votar/Remover Voto' : 'Faça login para votar'}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-lightbulb-fill" viewBox="0 0 16 16">
+                                        <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13h-5a.5.5 0 0 1-.424-.768l.762-1.77c.1-.219.256-.423.453-.619A6 6 0 0 1 2 6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="col-9">
+                                <div class="card-body">
+                                    <h5 class="card-title">${idea.title}</h5>
+                                    <p class="card-text text-muted small">Por: ${idea.author_name}</p>
+                                    <p class="card-text">${idea.description.substring(0, 100)}...</p>
+                                    <div class="idea-actions">
+                                        <a href="/ideas/${idea.id}" class="btn btn-sm btn-info">Visualizar</a>
+                                        ${isAuthor ? `
+                                            <a href="/ideas/edit/${idea.id}" class="btn btn-sm btn-warning">Editar</a>
+                                            <button class="btn btn-sm btn-danger btn-delete-idea" data-idea-id="${idea.id}">Excluir</button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        const loadIdeas = async () => {
+            const ideasList = document.getElementById('ideas-list');
+            const loadingMessage = document.getElementById('loading-message');
+            
+            if (loadingMessage) loadingMessage.textContent = 'Carregando ideias...';
+
+            try {
+                const response = await window.fetchAuth('/api/ideas', { method: 'GET' });
+                const ideas = await response.json();
+
+                if (loadingMessage) loadingMessage.remove();
+                ideasList.innerHTML = '';
+
+                if (ideas.length === 0) {
+                    ideasList.innerHTML = '<p class="text-center">Nenhuma ideia cadastrada ainda. Seja o primeiro!</p>';
+                    return;
+                }
+
+                ideas.forEach(idea => {
+                    ideasList.innerHTML += renderIdea(idea);
+                });
+
+                document.querySelectorAll('.btn-vote').forEach(button => {
+                    button.addEventListener('click', handleVoteClick);
+                });
+                
+                document.querySelectorAll('.btn-delete-idea').forEach(button => {
+                    button.addEventListener('click', handleDeleteIdeaClick);
+                });
+
+            } catch (error) {
+                console.error('Erro ao carregar ideias:', error);
+                if (loadingMessage) loadingMessage.textContent = 'Erro ao carregar ideias.';
+                window.showMessage('Erro ao carregar ideias. Tente novamente mais tarde.', 'danger');
+            }
+        };
+
+        const handleVoteClick = async (e) => {
+            e.preventDefault();
+            const button = e.currentTarget;
+            const ideaId = button.dataset.ideaId;
+            let action = button.dataset.action;
+            
+            if (!window.getToken()) {
+                window.showMessage('Você precisa estar logado para votar.', 'warning');
+                return;
+            }
+
+            const url = action === 'add' ? '/api/votes/vote' : '/api/votes/remove-vote';
+            
+            try {
+                const response = await window.fetchAuth(url, {
+                    method: 'POST',
+                    body: JSON.stringify({ idea_id: ideaId })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const voteCountSpan = document.getElementById(`vote-count-${ideaId}`);
+                    voteCountSpan.textContent = result.voteCount;
+
+                    if (action === 'add') {
+                        button.classList.add('voted');
+                        button.dataset.action = 'remove';
+                        window.showMessage('Voto registrado com sucesso!', 'success');
+                    } else {
+                        button.classList.remove('voted');
+                        button.dataset.action = 'add';
+                        window.showMessage('Voto removido com sucesso!', 'success');
+                    }
+                } else {
+                    window.showMessage(result.error || 'Erro ao processar voto.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao votar:', error);
+                window.showMessage('Erro de rede ao votar. Tente novamente.', 'danger');
+            }
+        };
+        
+        const handleDeleteIdeaClick = async (e) => {
+            e.preventDefault();
+            const button = e.currentTarget;
+            const ideaId = button.dataset.ideaId;
+            
+            if (!confirm('Tem certeza que deseja excluir esta ideia?')) {
+                return;
+            }
+
+            try {
+                const response = await window.fetchAuth(`/api/ideas/${ideaId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.showMessage('Ideia excluída com sucesso!', 'success');
+                    
+                    loadIdeas();
+                } else {
+                    window.showMessage(result.error || 'Erro ao excluir ideia.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao excluir ideia:', error);
+                window.showMessage('Erro de rede ao excluir ideia. Tente novamente.', 'danger');
+            }
+        };
+
+        loadIdeas();
+    });
+</script>

@@ -1,0 +1,120 @@
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h1 class="mb-4">{{idea.title}}</h1>
+        <div id="message-container"></div>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="card-text text-muted small">Por: {{idea.author_name}} | Categoria: {{idea.category}}</p>
+                <p class="card-text">{{idea.description}}</p>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="vote-info d-flex align-items-center">
+                        <span class="vote-count me-3" id="vote-count-{{idea.id}}">{{idea.vote_count}} Votos</span>
+                        <button class="btn btn-sm btn-outline-danger btn-vote" 
+                                data-idea-id="{{idea.id}}" 
+                                data-action="{{#if idea.hasVoted}}remove{{else}}add{{/if}}"
+                                title="Votar/Remover Voto">
+                            {{#if idea.hasVoted}}
+                                Remover Voto
+                            {{else}}
+                                Votar
+                            {{/if}}
+                        </button>
+                    </div>
+                    
+                    <div class="idea-actions">
+                        {{#if idea.isAuthor}}
+                            <a href="/ideas/edit/{{idea.id}}" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger btn-delete-idea" data-idea-id="{{idea.id}}">Excluir</button>
+                        {{/if}}
+                        <a href="/" class="btn btn-secondary">Voltar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/ideas.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ideaId = '{{idea.id}}';
+        
+        const handleVoteClick = async (e) => {
+            e.preventDefault();
+            const button = e.currentTarget;
+            let action = button.dataset.action;
+            
+            if (!window.getToken()) {
+                window.showMessage('Você precisa estar logado para votar.', 'warning');
+                return;
+            }
+
+            const url = action === 'add' ? '/api/votes/vote' : '/api/votes/remove-vote';
+            
+            try {
+                const response = await window.fetchAuth(url, {
+                    method: 'POST',
+                    body: JSON.stringify({ idea_id: ideaId })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Atualiza o botão e a contagem
+                    const voteCountSpan = document.getElementById(`vote-count-${ideaId}`);
+                    voteCountSpan.textContent = `${result.voteCount} Votos`;
+
+                    if (action === 'add') {
+                        button.textContent = 'Remover Voto';
+                        button.dataset.action = 'remove';
+                        window.showMessage('Voto registrado com sucesso!', 'success');
+                    } else {
+                        button.textContent = 'Votar';
+                        button.dataset.action = 'add';
+                        window.showMessage('Voto removido com sucesso!', 'success');
+                    }
+                } else {
+                    window.showMessage(result.error || 'Erro ao processar voto.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao votar:', error);
+                window.showMessage('Erro de rede ao votar. Tente novamente.', 'danger');
+            }
+        };
+        
+        const handleDeleteIdeaClick = async (e) => {
+            e.preventDefault();
+            const button = e.currentTarget;
+            
+            if (!confirm('Tem certeza que deseja excluir esta ideia?')) {
+                return;
+            }
+
+            try {
+                const response = await window.fetchAuth(`/api/ideas/${ideaId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.showMessage('Ideia excluída com sucesso!', 'success');
+
+                    window.location.href = '/';
+                } else {
+                    window.showMessage(result.error || 'Erro ao excluir ideia.', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro de rede ao excluir ideia:', error);
+                window.showMessage('Erro de rede ao excluir ideia. Tente novamente.', 'danger');
+            }
+        };
+
+        document.querySelector('.btn-vote')?.addEventListener('click', handleVoteClick);
+        document.querySelector('.btn-delete-idea')?.addEventListener('click', handleDeleteIdeaClick);
+    });
+</script>
