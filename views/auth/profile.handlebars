@@ -27,16 +27,20 @@
             return;
         }
 
+        // 1. Exibir informações do perfil
         document.getElementById('profile-name').textContent = customer.name;
         document.getElementById('profile-email').textContent = customer.email;
 
+        // 2. Carregar e exibir as ideias do usuário
         const loadMyIdeas = async () => {
             const ideasList = document.getElementById('my-ideas-list');
             const loadingMessage = document.getElementById('loading-ideas');
             
             try {
+                // Assumindo que a rota GET /ideas/my-ideas retorna JSON com a lista de ideias do usuário
                 const response = await window.fetchAuth('/api/ideas/my-ideas', { method: 'GET' });
-                const ideas = await response.json();
+                const data = await response.json();
+                const ideas = data.ideas || [];
 
                 if (loadingMessage) loadingMessage.remove();
                 ideasList.innerHTML = '';
@@ -64,6 +68,7 @@
                     `;
                 });
                 
+                // Adiciona listeners de exclusão
                 document.querySelectorAll('.btn-delete-idea').forEach(button => {
                     button.addEventListener('click', handleDeleteIdeaClick);
                 });
@@ -75,6 +80,7 @@
             }
         };
         
+        // Função para lidar com a exclusão de ideia (reutilizada do home.handlebars)
         const handleDeleteIdeaClick = async (e) => {
             e.preventDefault();
             const button = e.currentTarget;
@@ -93,7 +99,7 @@
 
                 if (response.ok) {
                     window.showMessage('Ideia excluída com sucesso!', 'success');
-                    
+                    // Recarrega a lista de ideias
                     loadMyIdeas();
                 } else {
                     window.showMessage(result.error || 'Erro ao excluir ideia.', 'danger');

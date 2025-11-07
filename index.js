@@ -11,7 +11,8 @@ dotenv.config();
 const authApiRoutes = require("./routes/authRoutes");
 const ideaApiRoutes = require("./routes/ideaRoutes");
 const voteApiRoutes = require("./routes/voteRoutes");
-const viewRoutes = require("./routes/viewRoutes"); // Novas rotas para renderizar views
+const viewRoutes = require("./routes/viewRoutes");
+const ideaViewRoutes = require("./routes/ideaViewRoutes");
 
 // Importar conexão com o banco (apenas para inicializar)
 require("./db/conn");
@@ -23,6 +24,13 @@ const PORT = process.env.PORT || 3000;
 // 3. CONFIGURAÇÃO DE MIDDLEWARES
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Middleware para injetar o customer no res.locals para o Handlebars
+// O req.customer será populado pelo middleware redirectIfNotLoggedIn nas rotas protegidas.
+app.use(async (req, res, next) => {
+  res.locals.customer = req.customer || null;
+  next();
+});
 
 // Configuração do Handlebars
 app.engine("handlebars", exphbs.engine({
@@ -58,7 +66,7 @@ app.use("/api/ideas", ideaApiRoutes);
 app.use("/api/votes", voteApiRoutes);
 
 // Rotas de View (renderizam Handlebars)
-// Esta deve ser a última rota a ser registrada para não interceptar as rotas de API
+app.use("/ideas", ideaViewRoutes);
 app.use("/", viewRoutes);
 
 // 5. INICIALIZAÇÃO DO SERVIDOR

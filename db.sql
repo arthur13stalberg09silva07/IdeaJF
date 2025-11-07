@@ -3,7 +3,8 @@ CREATE TABLE customer (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL
 );
 
 CREATE TABLE idea (
@@ -13,6 +14,7 @@ CREATE TABLE idea (
     description TEXT NOT NULL,
     category VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL,
     CONSTRAINT fk_idea_customer
         FOREIGN KEY (customer_id)
         REFERENCES customer (id)
