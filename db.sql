@@ -23,6 +23,7 @@ CREATE TABLE vote (
     id SERIAL PRIMARY KEY,
     customer_id INT NOT NULL,
     idea_id INT NOT NULL,
+    value INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_vote_customer
         FOREIGN KEY (customer_id)
@@ -51,12 +52,12 @@ VALUES
 (4, 'Marketplace de Artesãos Locais', 'Plataforma que conecta artesãos a consumidores diretos.', 'Comércio');
 
 
-INSERT INTO vote (customer_id, idea_id)
+INSERT INTO vote (customer_id, idea_id, value)
 VALUES
-(1, 2),
-(2, 1),
-(3, 1), 
-(3, 4),
-(4, 3), 
-(2, 3),
-(1, 3);
+(1, 2, 1),
+(2, 1, 2),
+(3, 1, 2), 
+(3, 4, 1),
+(4, 3, 1), 
+(2, 3, 2),
+(1, 3, 1);

@@ -4,41 +4,41 @@ const Idea = require('../models/Idea');
 class VoteController {
   static async vote(req, res) {
     try {
-      const { idea_id } = req.body;
+      const { idea_id, value } = req.body;
       const customer_id = req.customer.id;
 
       if (!idea_id) {
         return res.status(400).json({ error: 'ID da ideia é obrigatório.' });
       }
 
-      // Verificar se a ideia existe
+      if (typeof value !== 'number') {
+        return res.status(400).json({ error: 'Valor do voto deve ser numérico.' });
+      }
+
       const idea = await Idea.findById(idea_id);
       if (!idea) {
         return res.status(404).json({ error: 'Ideia não encontrada.' });
       }
 
-      // Verificar se o usuário já votou nesta ideia
       const alreadyVoted = await Vote.exists({ customer_id, idea_id });
       if (alreadyVoted) {
         return res.status(400).json({ error: 'Você já votou nesta ideia.' });
       }
 
-      // Criar o voto
-      const vote = await Vote.create({ customer_id, idea_id });
-
-      // Buscar a contagem atualizada de votos
+      const vote = await Vote.create({ customer_id, value, idea_id });
       const voteCount = await Vote.countByIdeaId(idea_id);
 
-      res.json({
+      return res.json({
         message: 'Voto registrado com sucesso!',
         vote,
         voteCount
       });
     } catch (error) {
       console.error('Erro ao votar:', error);
-      res.status(500).json({ error: 'Erro interno do servidor.' });
+      return res.status(500).json({ error: 'Erro interno do servidor.' });
     }
   }
+
 
   static async removeVote(req, res) {
     try {

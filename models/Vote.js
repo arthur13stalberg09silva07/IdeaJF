@@ -1,16 +1,16 @@
 const pool = require('../db/conn');
 
 class Vote {
-  static async create({ customer_id, idea_id }) {
+  static async create({ customer_id, value, idea_id }) {
     const query = `
-      INSERT INTO vote (customer_id, idea_id) 
-      VALUES ($1, $2) 
+      INSERT INTO vote (customer_id, value, idea_id)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
-    
-    const result = await pool.query(query, [customer_id, idea_id]);
+    const result = await pool.query(query, [customer_id, value, idea_id]);
     return result.rows[0];
   }
+
 
   static async exists({ customer_id, idea_id }) {
     const query = 'SELECT id FROM vote WHERE customer_id = $1 AND idea_id = $2';
