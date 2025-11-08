@@ -63,10 +63,10 @@
             if (loadingMessage) loadingMessage.textContent = 'Carregando ideias...';
 
             try {
-                // Assumindo que a rota GET /ideas retorna JSON com a lista de ideias
+                // Assumindo que a rota GET /api/ideas retorna JSON com a lista de ideias
                 const response = await window.fetchAuth('/api/ideas', { method: 'GET' });
                 const data = await response.json();
-const ideas = data.ideas || [];
+                const ideas = data.ideas || [];
 
                 if (loadingMessage) loadingMessage.remove();
                 ideasList.innerHTML = '';
@@ -112,9 +112,15 @@ const ideas = data.ideas || [];
             const url = action === 'add' ? '/api/votes/vote' : '/api/votes/remove-vote';
             
             try {
+                const payload = { idea_id: ideaId };
+                if (action === 'add') {
+                    // Adiciona o valor numérico que o backend está esperando
+                    payload.value = 1; // <--- CORRIGIDO PARA 'value'
+                }
+
                 const response = await window.fetchAuth(url, {
                     method: 'POST',
-                    body: JSON.stringify({ idea_id: ideaId })
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
