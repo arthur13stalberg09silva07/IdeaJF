@@ -1,6 +1,3 @@
-// public/js/main.js
-// Arquivo para funcionalidades gerais do site, como helpers de UI e mensagens.
-
 function showMessage(message, type = 'success') {
     const messageContainer = document.getElementById('message-container');
     if (!messageContainer) {
@@ -18,7 +15,6 @@ function showMessage(message, type = 'success') {
 
     messageContainer.appendChild(alertDiv);
 
-    // Remove a mensagem após 5 segundos
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);

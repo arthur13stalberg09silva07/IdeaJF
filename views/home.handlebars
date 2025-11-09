@@ -3,7 +3,6 @@
         <h1 class="mb-4">Ideias Mais Votadas</h1>
         <div id="message-container"></div>
         <div id="ideas-list" class="row">
-            <!-- Ideias serão carregadas aqui via JavaScript -->
             <p id="loading-message">Carregando ideias...</p>
         </div>
     </div>
@@ -12,12 +11,11 @@
 <script src="/js/ideas.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Função para renderizar uma única ideia
         const renderIdea = (idea) => {
             const customer = window.getCustomer();
             const isLoggedIn = !!customer;
             const isAuthor = isLoggedIn && customer.id === idea.customer_id;
-            const hasVoted = idea.hasVoted; // Assumindo que o controller irá popular isso
+            const hasVoted = idea.hasVoted; 
 
             return `
                 <div class="col-md-4">
@@ -55,7 +53,6 @@
             `;
         };
 
-        // Função para carregar e renderizar todas as ideias
         const loadIdeas = async () => {
             const ideasList = document.getElementById('ideas-list');
             const loadingMessage = document.getElementById('loading-message');
@@ -63,7 +60,6 @@
             if (loadingMessage) loadingMessage.textContent = 'Carregando ideias...';
 
             try {
-                // Assumindo que a rota GET /api/ideas retorna JSON com a lista de ideias
                 const response = await window.fetchAuth('/api/ideas', { method: 'GET' });
                 const data = await response.json();
                 const ideas = data.ideas || [];
@@ -80,12 +76,10 @@
                     ideasList.innerHTML += renderIdea(idea);
                 });
 
-                // Adiciona listeners de voto após a renderização
                 document.querySelectorAll('.btn-vote').forEach(button => {
                     button.addEventListener('click', handleVoteClick);
                 });
                 
-                // Adiciona listeners de exclusão
                 document.querySelectorAll('.btn-delete-idea').forEach(button => {
                     button.addEventListener('click', handleDeleteIdeaClick);
                 });
@@ -97,7 +91,6 @@
             }
         };
 
-        // Função para lidar com o clique no botão de voto
         const handleVoteClick = async (e) => {
             e.preventDefault();
             const button = e.currentTarget;
@@ -114,8 +107,7 @@
             try {
                 const payload = { idea_id: ideaId };
                 if (action === 'add') {
-                    // Adiciona o valor numérico que o backend está esperando
-                    payload.value = 1; // <--- CORRIGIDO PARA 'value'
+                    payload.value = 1;
                 }
 
                 const response = await window.fetchAuth(url, {
@@ -126,7 +118,6 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Atualiza o botão e a contagem
                     const voteCountSpan = document.getElementById(`vote-count-${ideaId}`);
                     voteCountSpan.textContent = result.voteCount;
 
@@ -148,7 +139,6 @@
             }
         };
         
-        // Função para lidar com a exclusão de ideia
         const handleDeleteIdeaClick = async (e) => {
             e.preventDefault();
             const button = e.currentTarget;
@@ -167,7 +157,6 @@
 
                 if (response.ok) {
                     window.showMessage('Ideia excluída com sucesso!', 'success');
-                    // Recarrega a lista de ideias
                     loadIdeas();
                 } else {
                     window.showMessage(result.error || 'Erro ao excluir ideia.', 'danger');

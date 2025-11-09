@@ -4,9 +4,8 @@ const { redirectIfNotLoggedIn } = require('../middleware/authView');
 
 const router = express.Router();
 
-// Rotas de View para Ideias
-router.get('/create', ViewController.createIdea); // Removido redirectIfNotLoggedIn
-router.get('/edit/:id', ViewController.editIdea); // Removido redirectIfNotLoggedIn
+router.get('/create', ViewController.createIdea); 
+router.get('/edit/:id', ViewController.editIdea);
 router.get('/:id', ViewController.viewIdea);
 
 module.exports = router;
